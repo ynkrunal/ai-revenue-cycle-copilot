@@ -1,0 +1,247 @@
+version: 2
+
+# Staging: one model per raw table. Rename nothing, cast types, test everything.
+
+models:
+  - name: stg_payers
+    description: "One row per synthetic payer (insurance company)."
+    columns:
+      - name: payer_id
+        data_tests:
+          - not_null
+          - unique
+      - name: payer_name
+        data_tests:
+          - not_null
+      - name: payer_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["commercial", "medicaid", "medicare", "medicare_advantage", "self_pay"]
+      - name: timely_filing_days
+        data_tests:
+          - not_null
+
+  - name: stg_providers
+    description: "One row per synthetic provider (clinic)."
+    columns:
+      - name: provider_id
+        data_tests:
+          - not_null
+          - unique
+      - name: provider_name
+        data_tests:
+          - not_null
+      - name: specialty
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["cardiology", "family_medicine", "gastroenterology", "ophthalmology", "orthopedics", "physical_therapy"]
+      - name: state
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["CT", "MA", "NH", "NJ", "NY", "PA", "RI"]
+
+  - name: stg_patients
+    description: "One row per synthetic patient. Coarse attributes only: no name, DOB or SSN."
+    columns:
+      - name: patient_id
+        data_tests:
+          - not_null
+          - unique
+      - name: birth_year
+        data_tests:
+          - not_null
+      - name: sex
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["F", "M", "U"]
+      - name: state
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["CT", "MA", "NH", "NJ", "NY", "PA", "RI"]
+      - name: payer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_payers')
+                field: payer_id
+
+  - name: stg_claims
+    description: "One row per claim header (837-like). Fields known at submission."
+    columns:
+      - name: claim_id
+        data_tests:
+          - not_null
+          - unique
+      - name: patient_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_patients')
+                field: patient_id
+      - name: provider_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_providers')
+                field: provider_id
+      - name: payer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_payers')
+                field: payer_id
+      - name: service_date
+        data_tests:
+          - not_null
+      - name: submission_date
+        data_tests:
+          - not_null
+      - name: place_of_service
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["11", "22", "24"]
+      - name: primary_icd10
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["E11.9", "E78.5", "H25.11", "H40.11X0", "H52.4", "I10", "I25.10", "I48.91", "J06.9", "K21.9", "K57.30", "M17.11", "M25.561", "M54.50", "R07.9", "S83.241A", "Z00.00", "Z12.11"]
+      - name: requires_prior_auth
+        data_tests:
+          - not_null
+      - name: prior_auth_obtained
+        data_tests:
+          - not_null
+      - name: line_count
+        data_tests:
+          - not_null
+      - name: total_charge
+        data_tests:
+          - not_null
+
+  - name: stg_claim_lines
+    description: "One row per service line on a claim."
+    columns:
+      - name: claim_line_id
+        data_tests:
+          - not_null
+          - unique
+      - name: claim_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_claims')
+                field: claim_id
+      - name: line_number
+        data_tests:
+          - not_null
+      - name: cpt_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["20610", "45378", "66984", "71046", "73721", "78452", "80053", "85025", "92014", "93000", "97110", "97140", "97161", "99203", "99213", "99214"]
+      - name: icd10_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["E11.9", "E78.5", "H25.11", "H40.11X0", "H52.4", "I10", "I25.10", "I48.91", "J06.9", "K21.9", "K57.30", "M17.11", "M25.561", "M54.50", "R07.9", "S83.241A", "Z00.00", "Z12.11"]
+      - name: units
+        data_tests:
+          - not_null
+      - name: line_charge
+        data_tests:
+          - not_null
+
+  - name: stg_remits
+    description: "One row per claim: the payer's first remit (835-like). Label source only."
+    columns:
+      - name: remit_id
+        data_tests:
+          - not_null
+          - unique
+      - name: claim_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_claims')
+                field: claim_id
+      - name: adjudication_date
+        data_tests:
+          - not_null
+      - name: claim_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["denied", "paid", "partially_denied"]
+      - name: allowed_amount
+        data_tests:
+          - not_null
+      - name: paid_amount
+        data_tests:
+          - not_null
+      - name: patient_responsibility
+        data_tests:
+          - not_null
+
+  - name: stg_remit_adjustments
+    description: "One row per CAS adjustment on a remit line (CARC/RARC). Label source only."
+    columns:
+      - name: adjustment_id
+        data_tests:
+          - not_null
+          - unique
+      - name: remit_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_remits')
+                field: remit_id
+      - name: claim_line_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_claim_lines')
+                field: claim_line_id
+      - name: group_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["CO", "PR"]
+      - name: carc_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["1", "2", "11", "16", "18", "27", "29", "45", "50", "96", "197"]
+      - name: rarc_code
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["M62", "M76", "MA130", "N130", "N30"]
+      - name: adjustment_amount
+        data_tests:
+          - not_null

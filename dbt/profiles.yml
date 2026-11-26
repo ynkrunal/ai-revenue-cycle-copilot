@@ -1,0 +1,9 @@
+# Every environment-specific value comes from an environment variable.
+# Paths are relative to the folder you run dbt from (the repo root).
+rcm:
+  target: "{{ env_var('DBT_TARGET', 'duckdb') }}"
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('RCM_DUCKDB_PATH', 'data/rcm.duckdb') }}"
+      threads: 4

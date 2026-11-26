@@ -9,7 +9,7 @@ Every step: tests first → full suite run with output shown → `docs/stage-NN-
 | 1 | Scaffold | `pyproject.toml` (Python 3.12, `[dev]` extras); ruff configured; `pytest -q` runs one smoke test; `.github/workflows/ci.yml` runs ruff + pytest and is green on GitHub | Done |
 | 2 | Generator v1 | Seeded generator creates payers, providers, synthetic patients, claim headers and lines; same seed → identical output (tested); schema tests pass; IDs use synthetic prefixes and no SSN-shaped values (tested) | Done |
 | 3 | Generator v2 | Adds remits with CARC/RARC codes; injected denial drivers + noise; CLI writes ~100k claims over 18 months to `data/raw/*.parquet`; denial rate between 8% and 15% (tested); each driver shows lift > 1 (tested) | Done |
-| 4 | dbt init + staging | dbt project with DuckDB profile (env-based); staging models for every raw table; `unique`/`not_null`/`accepted_values` tests; `dbt build --project-dir dbt --profiles-dir dbt` passes | Todo |
+| 4 | dbt init + staging | dbt project with DuckDB profile (env-based); staging models for every raw table; `unique`/`not_null`/`accepted_values` tests; `dbt build --project-dir dbt --profiles-dir dbt` passes | Done |
 | 5 | dbt marts | `fct_claims`, `dim_payer`, `dim_provider`, `feat_claims_at_submission`, `mart_denial_kpis` built; a custom dbt test confirms no remit columns in the features; `dbt build` passes | Todo |
 | 6 | Baseline + priority | Logistic regression trained on a time split (last 3 months = holdout); PR-AUC / ROC-AUC logged; priority score computed; worklist CSV sorted by priority descending (tested) | Todo |
 | 7 | FastAPI v1 | `/health`, `/score` (claim features → probability), `/worklist?limit=` work; pydantic schemas; integration tests with TestClient pass | Todo |

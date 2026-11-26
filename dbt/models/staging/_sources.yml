@@ -1,0 +1,17 @@
+version: 2
+
+sources:
+  - name: raw
+    description: >
+      Synthetic Parquet files written by `python -m rcm.generator`.
+      No real PHI or PII. Remit tables hold labels only, never features.
+    config:
+      external_location: "{{ env_var('RCM_RAW_DIR', 'data/raw') }}/{name}.parquet"
+    tables:
+      - name: payers
+      - name: providers
+      - name: patients
+      - name: claims
+      - name: claim_lines
+      - name: remits
+      - name: remit_adjustments

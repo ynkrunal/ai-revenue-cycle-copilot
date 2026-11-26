@@ -1,0 +1,17 @@
+name: rcm
+version: "0.1.0"
+config-version: 2
+profile: rcm
+
+model-paths: ["models"]
+test-paths: ["tests"]
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  rcm:
+    staging:
+      +schema: staging
+      +materialized: view
+
+flags:
+  send_anonymous_usage_stats: false

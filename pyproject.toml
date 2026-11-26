@@ -12,6 +12,8 @@ dependencies = [
     "numpy>=2.1",
     "pandas>=2.2",
     "pyarrow>=18.0",
+    "duckdb>=1.1",
+    "scikit-learn>=1.5",
 ]
 
 [project.optional-dependencies]
@@ -42,6 +44,9 @@ select = [
     "UP",  # pyupgrade
     "SIM", # flake8-simplify
 ]
+
+[tool.ruff.lint.isort]
+known-first-party = ["rcm", "tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

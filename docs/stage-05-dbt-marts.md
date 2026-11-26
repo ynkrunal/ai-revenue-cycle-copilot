@@ -101,7 +101,7 @@ Done. PASS=176 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=176
 
 ## A heads-up for Step 6
 
-Service dates run January 2025 to June 2026, but late claims are **sent** up to 120 days later. So submission months July to October 2026 have only a few claims each (1,097, 242, 130 and 36), and those are mostly late filers. If Step 6 used the "last 3 submission months" as the holdout, it would test on only 408 claims that are nearly all late. Step 6 should define the holdout as the last 3 months **of the 18-month window** (April to June 2026). It should then drop the thin tail or put it in the holdout, and the stage doc should say which.
+Service dates run January 2025 to June 2026, but late claims are **sent** up to 120 days later. So submission months July to October 2026 have only a few claims each (1,097, 242, 130 and 36). July is mostly end-of-June visits, but August to October are all claims sent 30+ days late. If Step 6 used the "last 3 submission months" as the holdout, it would test on only 408 claims, all of them late. (Corrected in Step 6: an earlier version said the whole tail was mostly late filers.) Step 6 should define the holdout as the last 3 months **of the 18-month window** (April to June 2026). It should then drop the thin tail or put it in the holdout, and the stage doc should say which.
 
 ## What is next
 

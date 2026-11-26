@@ -8,7 +8,10 @@ version = "0.1.0"
 description = "AI Revenue Cycle Copilot: predicts claim denial risk and ranks a worklist (synthetic data only)."
 readme = "PRD.md"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "numpy>=2.1",
+    "pandas>=2.2",
+]
 
 [project.optional-dependencies]
 dev = [

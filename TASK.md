@@ -12,7 +12,7 @@ Every step: tests first → full suite run with output shown → `docs/stage-NN-
 | 4 | dbt init + staging | dbt project with DuckDB profile (env-based); staging models for every raw table; `unique`/`not_null`/`accepted_values` tests; `dbt build --project-dir dbt --profiles-dir dbt` passes | Done |
 | 5 | dbt marts | `fct_claims`, `dim_payer`, `dim_provider`, `feat_claims_at_submission`, `mart_denial_kpis` built; a custom dbt test confirms no remit columns in the features; `dbt build` passes | Done |
 | 6 | Baseline + priority | Logistic regression trained on a time split (last 3 months = holdout); PR-AUC / ROC-AUC logged; priority score computed; worklist CSV sorted by priority descending (tested) | Done |
-| 7 | FastAPI v1 | `/health`, `/score` (claim features → probability), `/worklist?limit=` work; pydantic schemas; integration tests with TestClient pass | Todo |
+| 7 | FastAPI v1 | `/health`, `/score` (claim features → probability), `/worklist?limit=` work; pydantic schemas; integration tests with TestClient pass | Done |
 | 8 | Streamlit v1 + compose | Streamlit worklist table calls the API; `docker compose up` serves both; manual check documented with a screenshot. **Thin slice done.** | Todo |
 | 9 | XGBoost | XGBoost trained on the same split; beats baseline on PR-AUC; calibration checked; artifact saved to `models/artifacts/`; comparison table in the stage doc | Todo |
 | 10 | SHAP reasons | Top-3 reasons per claim, readable labels; returned by `/score` and `/claims/{id}`; tests check 3 reasons present and sorted by impact | Todo |

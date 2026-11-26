@@ -125,3 +125,83 @@ STATES: tuple[str, ...] = ("MA", "NY", "NJ", "PA", "CT", "RI", "NH")
 MAX_LINES_PER_CLAIM = 4
 LINE_COUNT_PROBS: tuple[float, ...] = (0.45, 0.30, 0.17, 0.08)  # 1, 2, 3, 4 lines
 MAX_SUBMISSION_LAG_DAYS = 120
+
+# ---------------------------------------------------------------------------
+# Remits (835-like): adjudication outcomes. Used only to build labels, never as
+# model features.
+# ---------------------------------------------------------------------------
+
+
+class Carc(NamedTuple):
+    description: str
+    rarc: str | None  # remark code sent with this CARC, if any
+
+
+CARC_CODES: dict[str, Carc] = {
+    # Denials
+    "197": Carc("Precertification/authorization/notification absent", "M62"),
+    "29": Carc("The time limit for filing has expired", None),
+    "11": Carc("The diagnosis is inconsistent with the procedure", "M76"),
+    "16": Carc("Claim/service lacks information or has submission/billing error(s)", "MA130"),
+    "27": Carc("Expenses incurred after coverage terminated", "N30"),
+    "50": Carc("Non-covered: not deemed a medical necessity by the payer", "N130"),
+    "18": Carc("Exact duplicate claim/service", None),
+    "96": Carc("Non-covered charge(s)", "N130"),
+    # Normal adjustments on paid lines (not denials)
+    "45": Carc("Charge exceeds fee schedule/maximum allowable", None),
+    "1": Carc("Deductible amount", None),
+    "2": Carc("Coinsurance amount", None),
+}
+
+DENIAL_CARC: frozenset[str] = frozenset({"197", "29", "11", "16", "27", "50", "18", "96"})
+PATIENT_RESPONSIBILITY_CARC: frozenset[str] = frozenset({"1", "2"})
+RARC_CODES: frozenset[str] = frozenset(c.rarc for c in CARC_CODES.values() if c.rarc)
+GROUP_CODES: frozenset[str] = frozenset({"CO", "PR"})
+CLAIM_STATUSES: frozenset[str] = frozenset({"paid", "partially_denied", "denied"})
+
+# Random "background" denials that no submission-time field explains, by weight.
+NOISE_DENIAL_WEIGHTS: dict[str, float] = {
+    "16": 0.35,
+    "27": 0.20,
+    "50": 0.20,
+    "18": 0.15,
+    "96": 0.10,
+}
+NOISE_DENIAL_CARC: frozenset[str] = frozenset(NOISE_DENIAL_WEIGHTS)
+
+# Denial drivers planted in the data (all knowable at submission time):
+#   missing prior auth  -> CARC 197 on the auth-required lines
+#   late submission     -> CARC 29 on the whole claim (lag > payer timely-filing limit)
+#   dx/procedure clash  -> CARC 11 on the mismatched lines
+#   strict payer type   -> higher background denial rate
+DRIVER_DENIAL_PROB: dict[str, float] = {
+    "late_submission": 0.95,
+    "missing_prior_auth": 0.80,
+    "dx_procedure_mismatch": 0.50,
+}
+
+# A wellness or screening diagnosis billed with a problem-focused or diagnostic service.
+DX_PROCEDURE_MISMATCH: dict[str, frozenset[str]] = {
+    "Z00.00": frozenset({"99213", "99214"}),
+    "Z12.11": frozenset({"45378"}),
+}
+
+STRICT_PAYER_TYPES: frozenset[str] = frozenset({"medicaid", "medicare_advantage"})
+
+
+class PayerTerms(NamedTuple):
+    noise_denial_rate: float  # background denial probability
+    allowed_ratio: float  # allowed amount as a share of billed charge
+    patient_share: float  # share of allowed amount the patient owes
+
+
+PAYER_TERMS: dict[str, PayerTerms] = {
+    "commercial": PayerTerms(0.050, 0.55, 0.20),
+    "medicare": PayerTerms(0.035, 0.40, 0.20),
+    "medicare_advantage": PayerTerms(0.120, 0.42, 0.10),
+    "medicaid": PayerTerms(0.130, 0.32, 0.02),
+    "self_pay": PayerTerms(0.020, 0.60, 1.00),  # the patient owes all of it
+}
+
+MIN_ADJUDICATION_DAYS = 7
+MAX_ADJUDICATION_DAYS = 45

@@ -5,7 +5,7 @@ import pytest
 from pandas.api import types as ptypes
 
 from rcm.generator import reference
-from rcm.generator.schema import PRIMARY_KEYS, SCHEMAS
+from rcm.generator.schema import NULLABLE_COLUMNS, PRIMARY_KEYS, SCHEMAS
 
 DTYPE_CHECKS = {
     "string": ptypes.is_string_dtype,
@@ -33,8 +33,14 @@ def test_column_types_match_schema(tables: dict[str, pd.DataFrame], table: str) 
 
 
 @pytest.mark.parametrize("table", sorted(SCHEMAS))
-def test_no_nulls(tables: dict[str, pd.DataFrame], table: str) -> None:
-    assert not tables[table].isna().any().any()
+def test_no_nulls_outside_nullable_columns(tables: dict[str, pd.DataFrame], table: str) -> None:
+    required = [c for c in SCHEMAS[table] if c not in NULLABLE_COLUMNS.get(table, set())]
+    assert not tables[table][required].isna().any().any()
+
+
+def test_nullable_columns_are_declared_in_schema() -> None:
+    for table, columns in NULLABLE_COLUMNS.items():
+        assert columns <= set(SCHEMAS[table])
 
 
 @pytest.mark.parametrize("table", sorted(SCHEMAS))
@@ -52,3 +58,8 @@ def test_accepted_values(tables: dict[str, pd.DataFrame]) -> None:
     assert set(tables["claim_lines"]["cpt_code"]) <= set(reference.CPT_CODES)
     assert set(tables["claim_lines"]["icd10_code"]) <= set(reference.ICD10_CODES)
     assert set(tables["claims"]["primary_icd10"]) <= set(reference.ICD10_CODES)
+    assert set(tables["remits"]["claim_status"]) <= reference.CLAIM_STATUSES
+    adjustments = tables["remit_adjustments"]
+    assert set(adjustments["group_code"]) <= reference.GROUP_CODES
+    assert set(adjustments["carc_code"]) <= set(reference.CARC_CODES)
+    assert set(adjustments["rarc_code"].dropna()) <= reference.RARC_CODES

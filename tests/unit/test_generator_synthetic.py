@@ -12,6 +12,8 @@ ID_PATTERNS = {
     ("patients", "patient_id"): r"SYN-MRN-\d{6}",
     ("claims", "claim_id"): r"SYN-CLM-\d{7}",
     ("claim_lines", "claim_line_id"): r"SYN-CLM-\d{7}-L\d{2}",
+    ("remits", "remit_id"): r"SYN-RMT-\d{7}",
+    ("remit_adjustments", "adjustment_id"): r"SYN-ADJ-\d{8}",
 }
 
 # Any 9 digits laid out like an SSN (with dashes, spaces or nothing between groups).
@@ -40,7 +42,7 @@ def _string_columns(tables: dict[str, pd.DataFrame]):
     for name, df in tables.items():
         for column in df.columns:
             if ptypes.is_string_dtype(df[column]):
-                yield name, column, df[column].astype(str)
+                yield name, column, df[column].dropna().astype(str)
 
 
 def test_no_value_looks_like_an_ssn(tables: dict[str, pd.DataFrame]) -> None:

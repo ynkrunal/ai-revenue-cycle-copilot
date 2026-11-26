@@ -70,7 +70,7 @@ To try it in Python:
 ```python
 from rcm.generator import GeneratorConfig, generate
 
-tables = generate(GeneratorConfig(seed=42))   # 100,000 claims, 18 months
+tables = generate(GeneratorConfig(seed=42))  # 100,000 claims, 18 months
 tables["claims"].head()
 ```
 

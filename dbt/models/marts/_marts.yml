@@ -1,0 +1,181 @@
+version: 2
+
+models:
+  - name: dim_payer
+    description: "One row per payer."
+    columns:
+      - name: payer_id
+        data_tests: [not_null, unique]
+      - name: payer_name
+        data_tests: [not_null]
+      - name: payer_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["commercial", "medicaid", "medicare", "medicare_advantage", "self_pay"]
+      - name: timely_filing_days
+        data_tests: [not_null]
+      - name: is_government_payer
+        data_tests: [not_null]
+
+  - name: dim_provider
+    description: "One row per provider (clinic)."
+    columns:
+      - name: provider_id
+        data_tests: [not_null, unique]
+      - name: provider_name
+        data_tests: [not_null]
+      - name: specialty
+        data_tests: [not_null]
+      - name: state
+        data_tests: [not_null]
+
+  - name: fct_claims
+    description: >
+      One row per claim with its first-remit outcome. Holds the label `is_denied`.
+      Use for labels, KPIs and the worklist. Never use as model features.
+    columns:
+      - name: claim_id
+        data_tests: [not_null, unique]
+      - name: patient_id
+        data_tests: [not_null]
+      - name: provider_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_provider')
+                field: provider_id
+      - name: payer_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_payer')
+                field: payer_id
+      - name: service_date
+        data_tests: [not_null]
+      - name: submission_date
+        data_tests: [not_null]
+      - name: submission_month
+        data_tests: [not_null]
+      - name: adjudication_date
+        data_tests: [not_null]
+      - name: days_to_adjudicate
+        data_tests: [not_null]
+      - name: place_of_service
+        data_tests: [not_null]
+      - name: line_count
+        data_tests: [not_null]
+      - name: total_charge
+        data_tests: [not_null]
+      - name: claim_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["paid", "partially_denied", "denied"]
+      - name: is_denied
+        description: "Label: true if the first remit denied any line."
+        data_tests: [not_null]
+      - name: primary_denial_carc
+        description: "First denial CARC on the remit. Empty when the claim was paid."
+      - name: denial_carc_group
+        description: "Reason group of the primary denial CARC (from the carc_reference seed)."
+      - name: denied_amount
+        description: "Billed dollars on denied lines: the amount at stake for rework."
+        data_tests: [not_null]
+      - name: allowed_amount
+        data_tests: [not_null]
+      - name: paid_amount
+        data_tests: [not_null]
+      - name: patient_responsibility
+        data_tests: [not_null]
+
+  - name: feat_claims_at_submission
+    description: >
+      Model features, one row per claim, built ONLY from facts known at submission.
+      No remit or label columns allowed (see tests/assert_no_remit_columns_in_features.sql).
+      Join to fct_claims on claim_id to get the label.
+    columns:
+      - name: claim_id
+        data_tests: [not_null, unique]
+      - name: submission_date
+        data_tests: [not_null]
+      - name: submission_month
+        description: "Used for the time-based train/holdout split."
+        data_tests: [not_null]
+      - name: service_date
+        data_tests: [not_null]
+      - name: payer_id
+        data_tests: [not_null]
+      - name: payer_type
+        data_tests: [not_null]
+      - name: timely_filing_days
+        data_tests: [not_null]
+      - name: provider_id
+        data_tests: [not_null]
+      - name: provider_specialty
+        data_tests: [not_null]
+      - name: provider_state
+        data_tests: [not_null]
+      - name: place_of_service
+        data_tests: [not_null]
+      - name: primary_icd10
+        data_tests: [not_null]
+      - name: primary_cpt_code
+        data_tests: [not_null]
+      - name: line_count
+        data_tests: [not_null]
+      - name: distinct_cpt_count
+        data_tests: [not_null]
+      - name: total_units
+        data_tests: [not_null]
+      - name: total_charge
+        data_tests: [not_null]
+      - name: max_line_charge
+        data_tests: [not_null]
+      - name: requires_prior_auth
+        data_tests: [not_null]
+      - name: prior_auth_obtained
+        data_tests: [not_null]
+      - name: missing_prior_auth
+        data_tests: [not_null]
+      - name: days_to_submit
+        data_tests: [not_null]
+      - name: past_timely_filing_limit
+        data_tests: [not_null]
+      - name: share_of_timely_limit_used
+        data_tests: [not_null]
+      - name: patient_age_at_service
+        data_tests: [not_null]
+      - name: patient_sex
+        data_tests: [not_null]
+      - name: has_z_code_dx
+        data_tests: [not_null]
+
+  - name: mart_denial_kpis
+    description: "One row per submission month and payer: volume, denial rate, dollars, top reason."
+    columns:
+      - name: submission_month
+        data_tests: [not_null]
+      - name: payer_id
+        data_tests: [not_null]
+      - name: payer_type
+        data_tests: [not_null]
+      - name: claims
+        data_tests: [not_null]
+      - name: denied_claims
+        data_tests: [not_null]
+      - name: denial_rate
+        data_tests: [not_null]
+      - name: billed_amount
+        data_tests: [not_null]
+      - name: denied_amount
+        data_tests: [not_null]
+      - name: paid_amount
+        data_tests: [not_null]
+      - name: top_denial_carc
+        description: "Most common primary denial CARC that month for that payer (ties: lowest code)."
+      - name: top_denial_carc_group

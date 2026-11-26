@@ -4,6 +4,7 @@ config-version: 2
 profile: rcm
 
 model-paths: ["models"]
+seed-paths: ["seeds"]
 test-paths: ["tests"]
 clean-targets: ["target", "dbt_packages"]
 
@@ -12,6 +13,22 @@ models:
     staging:
       +schema: staging
       +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+
+seeds:
+  rcm:
+    +schema: reference
+    carc_reference:
+      +column_types:
+        carc_code: varchar
+        description: varchar
+        is_denial: boolean
+        carc_group: varchar
 
 flags:
   send_anonymous_usage_stats: false

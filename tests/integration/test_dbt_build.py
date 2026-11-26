@@ -1,39 +1,16 @@
 """Run a real `dbt build` on a small generated sample and inspect the DuckDB result."""
 
-import os
 import subprocess
-import sys
 from pathlib import Path
 
-import duckdb
 import pandas as pd
 import pytest
 
 from rcm.generator import GeneratorConfig, generate
 from rcm.generator.io import read_tables, write_tables
 from rcm.generator.schema import SCHEMAS
-
-REPO = Path(__file__).resolve().parents[2]
-DBT_BIN = str(Path(sys.executable).parent / "dbt")
-
-
-def run_dbt_build(raw_dir: Path, work: Path) -> subprocess.CompletedProcess[str]:
-    env = {
-        **os.environ,
-        "RCM_RAW_DIR": str(raw_dir),
-        "RCM_DUCKDB_PATH": str(work / "rcm.duckdb"),
-        "DBT_TARGET_PATH": str(work / "target"),
-        "DBT_LOG_PATH": str(work / "logs"),
-    }
-    return subprocess.run(
-        [DBT_BIN, "build", "--project-dir", "dbt", "--profiles-dir", "dbt"],
-        cwd=REPO,
-        env=env,
-        capture_output=True,
-        text=True,
-        check=False,
-        timeout=300,
-    )
+from tests.integration.dbt_helpers import query as _query
+from tests.integration.dbt_helpers import run_dbt_build
 
 
 @pytest.fixture(scope="module")
@@ -44,11 +21,6 @@ def built(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
     result = run_dbt_build(raw, work)
     assert result.returncode == 0, result.stdout[-4000:]
     return raw, work / "rcm.duckdb"
-
-
-def _query(db: Path, sql: str) -> list[tuple]:
-    with duckdb.connect(str(db), read_only=True) as con:
-        return con.execute(sql).fetchall()
 
 
 def test_every_staging_model_has_the_raw_row_count(built: tuple[Path, Path]) -> None:

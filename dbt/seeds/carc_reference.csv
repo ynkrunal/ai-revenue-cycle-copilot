@@ -1,0 +1,12 @@
+carc_code,description,is_denial,carc_group
+1,Deductible amount,false,patient_responsibility
+2,Coinsurance amount,false,patient_responsibility
+11,The diagnosis is inconsistent with the procedure,true,coding
+16,Claim/service lacks information or has submission/billing error(s),true,billing_error
+18,Exact duplicate claim/service,true,duplicate
+27,Expenses incurred after coverage terminated,true,eligibility
+29,The time limit for filing has expired,true,timely_filing
+45,Charge exceeds fee schedule/maximum allowable,false,contractual
+50,Non-covered: not deemed a medical necessity by the payer,true,medical_necessity
+96,Non-covered charge(s),true,non_covered
+197,Precertification/authorization/notification absent,true,authorization

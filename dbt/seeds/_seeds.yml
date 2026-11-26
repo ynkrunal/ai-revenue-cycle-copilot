@@ -1,0 +1,24 @@
+version: 2
+
+seeds:
+  - name: carc_reference
+    description: "CARC codes used by the generator, whether each is a denial, and its reason group."
+    columns:
+      - name: carc_code
+        data_tests:
+          - not_null
+          - unique
+      - name: description
+        data_tests:
+          - not_null
+      - name: is_denial
+        data_tests:
+          - not_null
+      - name: carc_group
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["authorization", "timely_filing", "coding", "billing_error", "eligibility",
+                         "medical_necessity", "duplicate", "non_covered", "contractual",
+                         "patient_responsibility"]

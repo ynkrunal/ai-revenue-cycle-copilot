@@ -6,7 +6,7 @@ Every step: tests first → full suite run with output shown → `docs/stage-NN-
 | # | Step | Acceptance criteria | Status |
 |---|---|---|---|
 | 0 | Planning docs | `PRD.md`, `spec/plan.md`, `TASK.md`, `CLAUDE.md`, `.gitignore`, `docs/stage-00-planning.md` committed and pushed after review; `CLAUDE.md` < 100 lines | Done |
-| 1 | Scaffold | `pyproject.toml` (Python 3.12, `[dev]` extras); ruff configured; `pytest -q` runs one smoke test; `.github/workflows/ci.yml` runs ruff + pytest and is green on GitHub | Todo |
+| 1 | Scaffold | `pyproject.toml` (Python 3.12, `[dev]` extras); ruff configured; `pytest -q` runs one smoke test; `.github/workflows/ci.yml` runs ruff + pytest and is green on GitHub | Done |
 | 2 | Generator v1 | Seeded generator creates payers, providers, synthetic patients, claim headers and lines; same seed → identical output (tested); schema tests pass; IDs use synthetic prefixes and no SSN-shaped values (tested) | Todo |
 | 3 | Generator v2 | Adds remits with CARC/RARC codes; injected denial drivers + noise; CLI writes ~100k claims over 18 months to `data/raw/*.parquet`; denial rate between 8% and 15% (tested); each driver shows lift > 1 (tested) | Todo |
 | 4 | dbt init + staging | dbt project with DuckDB profile (env-based); staging models for every raw table; `unique`/`not_null`/`accepted_values` tests; `dbt build --project-dir dbt --profiles-dir dbt` passes | Todo |
